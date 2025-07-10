@@ -423,6 +423,101 @@ A layered approach to data pipelines:
 - Use Databricks SQL endpoints.
 - Schedule ETL to update reporting tables.
 
+  ## 31. What are SCD1 and SCD2? Explain with easy examples and Databricks implementation.
+
+### SCD1 (Slowly Changing Dimension Type 1)
+
+**Definition:**  
+SCD1 is used when you only care about the most recent data. Whenever there is a change in dimension (like a customer’s city), you simply update the existing record. **No history is kept**.
+
+**Easy Example:**  
+- Customer table:  
+    | CustomerID | Name   | City   |
+    |------------|--------|--------|
+    |     101    | Rahul  | Mumbai |
+- If Rahul moves to Pune, update the row:  
+    | CustomerID | Name   | City   |
+    |------------|--------|--------|
+    |     101    | Rahul  | Pune   |
+
+**Databricks Implementation:**
+```python
+# SCD1: Overwrite existing values
+from delta.tables import DeltaTable
+
+updates_df = spark.createDataFrame([
+    (101, "Rahul", "Pune")
+], ["CustomerID", "Name", "City"])
+
+deltaTable = DeltaTable.forPath(spark, "/mnt/delta/customers")
+deltaTable.alias("tgt").merge(
+    updates_df.alias("src"),
+    "tgt.CustomerID = src.CustomerID"
+).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+```
+- **Summary:** Only the latest value is stored. Past data is lost.
+
+---
+
+### SCD2 (Slowly Changing Dimension Type 2)
+
+**Definition:**  
+SCD2 is used when you need to keep a history of all changes. Each time a dimension attribute changes, a new row is added with the updated value, and the previous row is closed off (using an end date or a flag).
+
+**Easy Example:**  
+- Customer table with history:  
+    | CustomerID | Name   | City   | StartDate  | EndDate    | IsCurrent |
+    |------------|--------|--------|------------|------------|-----------|
+    |     101    | Rahul  | Mumbai | 2021-01-01 | 2023-05-10 | false     |
+    |     101    | Rahul  | Pune   | 2023-05-11 | NULL       | true      |
+- When Rahul moves from Mumbai to Pune, a new row is added for Pune and the old row becomes inactive (`EndDate` is set, `IsCurrent` is false).
+
+**Databricks Implementation:**
+```python
+from pyspark.sql.functions import current_date
+
+updates_df = spark.createDataFrame([
+    (101, "Rahul", "Pune", current_date())
+], ["CustomerID", "Name", "City", "StartDate"])
+
+deltaTable = DeltaTable.forPath(spark, "/mnt/delta/customers")
+deltaTable.alias("tgt").merge(
+    updates_df.alias("src"),
+    "tgt.CustomerID = src.CustomerID AND tgt.IsCurrent = true"
+).whenMatchedUpdate(
+    set={
+        "EndDate": "src.StartDate",
+        "IsCurrent": "false"
+    }
+).whenNotMatchedInsert(
+    values={
+        "CustomerID": "src.CustomerID",
+        "Name": "src.Name",
+        "City": "src.City",
+        "StartDate": "src.StartDate",
+        "EndDate": None,
+        "IsCurrent": "true"
+    }
+).execute()
+```
+- **Summary:** All changes are tracked. You can see who lived where and when.
+
+---
+
+#### **Comparison Table**
+
+| SCD Type | Update Method     | Keeps History? | Example Change           |
+|----------|-------------------|----------------|-------------------------|
+| SCD1     | Overwrite row     | No             | "Mumbai" → "Pune"       |
+| SCD2     | Add new row, close old one | Yes   | "Mumbai" → "Pune", previous address kept |
+
+**In Databricks ETL:**
+- Use SCD1 for simple updates, no history needed.
+- Use SCD2 for audit, historical analytics, regulatory needs.
+
+---
+
+
 ---
 
 **Note:**  
