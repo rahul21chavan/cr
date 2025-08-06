@@ -578,6 +578,283 @@ Clusters can be shared among notebooks or scheduled jobs.
 
 ---
 
+# 📘 Data Engineer Interview Q&A Guide (Focused Compilation)
+
+This markdown file includes a selected set of high-frequency and practical interview questions for Data Engineers, covering SQL, PySpark, AWS, and Databricks.
+
+---
+
+## ✅ SQL Interview Questions
+
+### 1. What are ACID properties in databases?
+ACID stands for:
+- **Atomicity**: All operations in a transaction complete successfully or none do.
+- **Consistency**: A transaction brings the database from one valid state to another.
+- **Isolation**: Transactions are securely and independently processed.
+- **Durability**: Once a transaction is committed, it remains so even after system failure.
+
+---
+
+### 2. How do you find the second-highest salary from a table?
+```sql
+SELECT MAX(salary) 
+FROM employees 
+WHERE salary < (SELECT MAX(salary) FROM employees);
+```
+
+---
+
+### 3. Write a SQL query to find the third-highest salary.
+```sql
+SELECT DISTINCT salary FROM Employee ORDER BY salary DESC LIMIT 1 OFFSET 2;
+```
+
+---
+
+### 4. Explain the different types of SQL JOINs with examples.
+- **INNER JOIN**: Only matching records from both tables.
+- **LEFT JOIN**: All rows from the left, matched rows from the right.
+- **RIGHT JOIN**: All rows from the right, matched rows from the left.
+- **FULL OUTER JOIN**: All rows from both tables; matched where possible.
+
+**Example (INNER JOIN)**:
+```sql
+SELECT a.id, a.name, b.salary 
+FROM employee a 
+INNER JOIN payroll b ON a.id = b.emp_id;
+```
+
+---
+
+### 5. What is a window function? Provide a use case.
+Window functions perform calculations across rows related to the current row, without collapsing them.
+
+**Example**: Ranking employees within departments:
+```sql
+SELECT name, department, RANK() OVER(PARTITION BY department ORDER BY salary DESC) AS rank
+FROM employee;
+```
+
+---
+
+### 6. How do you find duplicate records in SQL?
+```sql
+SELECT column1, COUNT(*) 
+FROM table 
+GROUP BY column1 
+HAVING COUNT(*) > 1;
+```
+
+---
+
+### 7. How do you handle NULL values in SQL?
+- Use `IS NULL` / `IS NOT NULL` to filter.
+- Use `COALESCE()` to replace nulls.
+- Use `IFNULL()` or `CASE WHEN` for conditional logic.
+
+```sql
+SELECT name, COALESCE(salary, 0) AS salary FROM employee;
+```
+
+---
+
+## ✅ PySpark Interview Questions
+
+### 8. What’s the difference between RDD and DataFrame in PySpark?
+- **RDD (Resilient Distributed Dataset):** Low-level API with no schema.
+- **DataFrame:** High-level API, optimized execution via Catalyst, schema-aware.
+
+Use RDD for fine-grained transformations, DataFrame for better performance and cleaner syntax.
+
+---
+
+### 9. How do you read a CSV file with headers into a PySpark DataFrame?
+```python
+df = spark.read.csv('path/to/file.csv', header=True, inferSchema=True)
+```
+
+---
+
+### 10. How can you drop duplicate rows in PySpark based on specific columns?
+```python
+df = df.dropDuplicates(['column1', 'column2'])
+```
+
+---
+
+### 11. What is a broadcast join and when should you use it?
+Broadcast join distributes the smaller DataFrame to all worker nodes to avoid shuffling.
+Best used when one table is small enough to fit in memory.
+
+---
+
+### 12. How to cache a DataFrame in PySpark and why?
+```python
+df.cache()
+```
+Caching stores data in memory to improve performance during repeated actions on the same DataFrame.
+
+---
+
+### 13. What is partitioning in Spark and why is it important?
+Partitioning splits data across multiple nodes for parallel processing.
+
+Types:
+- **Hash Partitioning** (default)
+- **Range Partitioning**
+
+Optimization tips:
+- Repartition large datasets
+- Avoid skewed keys
+
+```python
+df.repartition("region")
+df.coalesce(4)
+```
+
+---
+
+### 14. How would you optimize a slow PySpark job?
+- Use **broadcast joins** for small lookup tables.
+- **Avoid wide transformations** (like groupByKey).
+- **Cache intermediate results** if reused.
+- **Repartition** wisely to avoid skew.
+- **Read/write with optimized formats** (e.g., Parquet).
+
+---
+
+## ✅ AWS Interview Questions
+
+### 15. What is AWS Glue?
+AWS Glue is a serverless ETL service that supports job scheduling, schema inference, and integrations with S3, Redshift, Athena, and more.
+
+---
+
+### 16. How is data stored and accessed in S3?
+- Data is stored as objects in buckets.
+- Accessed using unique object keys via APIs, SDKs, CLI.
+- Supports versioning and lifecycle policies.
+
+---
+
+### 17. How would you implement a fault-tolerant ETL pipeline in AWS?
+- Use S3 for raw data staging
+- Glue for ETL
+- CloudWatch for monitoring
+- Lambda/Step Functions for retries
+- Ensure cross-region backups
+
+---
+
+### 18. Explain IAM and its use in securing resources.
+AWS IAM (Identity and Access Management):
+- Controls access via users, roles, and policies
+- Ensures fine-grained control over services and resources
+
+---
+
+### 19. What is AWS Lambda and how could you use it in data pipelines?
+Lambda allows serverless compute to run code on events.
+Use it for:
+- Lightweight ETL
+- Triggering pipelines
+- Notifications/alerts in workflows
+
+---
+
+## ✅ Databricks Interview Questions
+
+### 20. What is Databricks and how does it differ from running Spark on EC2?
+Databricks is a managed collaborative Spark platform with:
+- Notebook UI
+- Cluster management
+- Optimized runtimes
+- Delta Lake integration
+
+---
+
+### 21. What is Delta Lake and why use it?
+Delta Lake provides:
+- ACID transactions
+- Schema enforcement and evolution
+- Scalable metadata
+- Time travel queries
+
+---
+
+### 22. How do you schedule ETL pipelines in Databricks?
+Use **Databricks Jobs**:
+- Schedule notebooks/scripts
+- Pass parameters
+- Set retries and alerts
+
+---
+
+### 23. How do you manage credentials securely in Databricks?
+Use **secret scopes** to store sensitive data like keys/passwords and access them securely in jobs.
+
+---
+
+### 24. Provide PySpark code to upsert (merge) data in Delta Lake.
+```python
+from delta.tables import DeltaTable
+
+deltaTable = DeltaTable.forPath(spark, "/delta/events")
+deltaTable.alias("tgt").merge(
+    source_df.alias("src"),
+    "tgt.id = src.id"
+).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+```
+
+---
+
+## ✅ Scenario-Based & Behavioral Questions
+
+### 25. Describe your approach to building a robust pipeline for daily sales aggregation from raw logs to dashboard reporting.
+- Ingest raw logs from S3
+- Transform/cleanse using PySpark or Glue
+- Aggregate by store/date
+- Load into Redshift or Delta Lake
+- Schedule with Airflow/Databricks Jobs
+- Monitor via CloudWatch
+
+---
+
+### 26. How do you handle sudden spikes in data volume?
+- Scale compute (EMR, Databricks autoscale)
+- Optimize partitioning
+- Use spot instances for cost control
+- Monitor with CloudWatch
+
+---
+
+### 27. What steps do you take to ensure data quality and integrity?
+- Schema validation
+- Data profiling
+- Null and duplicate checks
+- Logging and alerting
+- Data Quality frameworks (e.g., Deequ, Great Expectations)
+
+---
+
+### 28. Tell me about a challenging data pipeline you designed—what technical difficulties did you face and how did you overcome them?
+Structure your story:
+- **Context**: What was the business need?
+- **Challenge**: Corrupt data, schema drift, volume surge?
+- **Actions**: Custom validation, schema evolution tools, retries
+- **Results**: Improved reliability, reduced job failures, better SLAs
+
+---
+
+### 29. What are your favorite tools and why?
+**Example:**
+- **PySpark** for large-scale transformations
+- **AWS Glue** for ETL orchestration
+- **Databricks** for collaboration and notebook-driven development
+- **Delta Lake** for data reliability
+
+---
+
 > **Prepared by:** Rahul Chavan  
 > **Role:** Data Engineer (2+ YOE)  
 > **Focus Areas:** SQL | PySpark | AWS | Databricks | ETL
