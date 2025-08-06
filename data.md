@@ -443,6 +443,139 @@ Chose schema refactoring mid-release → Fixed bugs early.
 ### 5. Tech Learning
 Follow blogs (AWS, Databricks), attend meetups, hands-on labs.
 
+# 📘 Data Engineer Interview Q&A Guide (Focused Compilation)
+
+This markdown file includes a selected set of high-frequency and practical interview questions for Data Engineers, covering SQL, PySpark, AWS, and Databricks.
+
+---
+
+## ✅ SQL Interview Questions
+
+### 1. How do you find the second-highest salary from a table?
+```sql
+SELECT MAX(salary) 
+FROM employees 
+WHERE salary < (SELECT MAX(salary) FROM employees);
+```
+
+---
+
+### 2. Explain the difference between INNER JOIN and LEFT JOIN
+- **INNER JOIN** returns only the matching rows from both tables.
+- **LEFT JOIN** returns all rows from the left table and matching rows from the right table; NULL if no match.
+
+```sql
+SELECT e.name, d.name 
+FROM employee e 
+INNER JOIN department d ON e.dept_id = d.id;
+
+SELECT e.name, d.name 
+FROM employee e 
+LEFT JOIN department d ON e.dept_id = d.id;
+```
+
+---
+
+### 3. How do you handle NULL values in SQL?
+- Use `IS NULL` / `IS NOT NULL` to filter.
+- Use `COALESCE()` to replace nulls.
+- Use `IFNULL()` or `CASE WHEN` for conditional logic.
+
+```sql
+SELECT name, COALESCE(salary, 0) AS salary FROM employee;
+```
+
+---
+
+## ✅ PySpark Interview Questions
+
+### 4. What’s the difference between RDD and DataFrame in PySpark?
+- **RDD (Resilient Distributed Dataset):** Low-level API with no schema.
+- **DataFrame:** High-level API, optimized execution via Catalyst, schema-aware.
+
+Use RDD for fine-grained transformations, DataFrame for better performance and cleaner syntax.
+
+---
+
+### 5. How do you handle missing values in a PySpark DataFrame?
+```python
+df.na.drop()                          # Drop rows with nulls
+df.na.fill({"age": 0, "city": "NA"})  # Fill nulls with values
+```
+
+---
+
+### 6. What is partitioning in Spark and why is it important?
+Partitioning splits data across multiple nodes for parallel processing.
+
+Types:
+- **Hash Partitioning** (default)
+- **Range Partitioning**
+
+Optimization tips:
+- Repartition large datasets
+- Avoid skewed keys
+
+```python
+df.repartition("region")
+df.coalesce(4)
+```
+
+---
+
+### 7. How would you optimize a slow PySpark job?
+- Use **broadcast joins** for small lookup tables.
+- **Avoid wide transformations** (like groupByKey).
+- **Cache intermediate results** if reused.
+- **Repartition** wisely to avoid skew.
+- **Read/write with optimized formats** (e.g., Parquet).
+
+---
+
+## ✅ AWS Interview Questions
+
+### 8. What is Amazon S3 and how is it used in data engineering?
+Amazon S3 is an object storage service.
+- Used for staging, backups, ETL inputs/outputs.
+- Integrated with Glue, Athena, EMR, Redshift.
+- Can be optimized via prefixes, partitioning, and lifecycle policies.
+
+---
+
+### 9. EC2 vs EMR
+- **EC2:** Raw compute resources, you manage everything.
+- **EMR:** Managed Hadoop/Spark cluster service for big data workloads.
+
+Use **EMR** for distributed ETL, **EC2** for custom compute pipelines.
+
+---
+
+### 10. How would you design a data pipeline using AWS services?
+**S3 → Glue → Transform → Redshift → CloudWatch (Monitoring)**
+- S3 for raw data
+- Glue for crawling & ETL
+- Redshift for analytics
+- CloudWatch for alerts & logs
+
+---
+
+## ✅ Databricks Interview Questions
+
+### 11. What is Databricks and how does it relate to Spark?
+Databricks is a unified analytics platform built on Apache Spark.
+- Offers collaborative notebooks
+- Simplifies Spark job management
+- Supports Delta Lake for ACID tables
+
+---
+
+### 12. How do you create a cluster in Databricks?
+- Navigate to **Compute > Create Cluster**
+- Choose runtime, node type, autoscaling
+- Click **Create** to launch cluster
+
+Clusters can be shared among notebooks or scheduled jobs.
+
 ---
 
 > **Prepared by:** Rahul Chavan  
