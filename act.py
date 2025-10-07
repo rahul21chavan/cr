@@ -168,3 +168,18 @@ if __name__ == "__main__":
   "verdict": "Excellent ✅",
   "explanation": "Minor variations but overall consistent summary."
 }
+
+#🧠 How It Works (Quick Explanation)
+Step	What Happens	Example
+1. Number extraction	Pulls all numeric values using regex	“1200”, “10”
+2. Numeric score	Calculates how close generated numbers are to expected	1180 ≈ 1200 → 0.983
+3. Context score	Uses LLM (via Langfuse) to check semantic match	“growth rate” ≈ “percent growth” → 0.95
+4. Verdict	Maps final score to qualitative label	0.967 → “Excellent ✅”
+5. Explanation	Adds a short reasoning summary	“Minor variations but overall consistent summary.”
+⚡ Advantages
+
+✅ Works for any kind of summary — text, table, or report
+✅ Balanced numeric + meaning-based scoring
+✅ LLM-powered semantic judgment
+✅ Human-readable verdict & explanation for dashboards
+✅ Plug-and-play with Langfuse’s evaluation tracking
