@@ -158,3 +158,13 @@ if __name__ == "__main__":
 
     result = evaluate_summary(expected, generated)
     print(result)
+
+
+#output
+{
+  "numeric_score": 0.983,
+  "context_score": 0.95,
+  "final_score": 0.967,
+  "verdict": "Excellent ✅",
+  "explanation": "Minor variations but overall consistent summary."
+}
